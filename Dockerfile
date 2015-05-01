@@ -3,7 +3,7 @@ FROM python:3.4-slim
 RUN groupadd user && useradd --create-home --home-dir /home/user -g user user
 WORKDIR /home/user
 
-ENV CELERY_VERSION 3.1.17
+ENV CELERY_VERSION 3.1.18
 
 RUN pip install celery=="$CELERY_VERSION"
 
