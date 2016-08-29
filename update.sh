@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-current="$(wget -qO- https://pypi.python.org/pypi/celery/json | jq -r '.releases | keys | .[]' | grep -v 'rc' | sort -V | tail -1)"
+current="$(curl -s https://pypi.python.org/pypi/celery/json | jq -r '.info.version')"
 
 set -x
-sed -ri 's/^(ENV CELERY_VERSION) .*/\1 '"$current"'/' Dockerfile
+sed -i -e 's/^\(ENV CELERY_VERSION\) .*/\1 '"$current"'/' Dockerfile
