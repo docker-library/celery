@@ -1,8 +1,19 @@
 #!/bin/bash
 set -eu
 
+declare -A aliases=(
+	[3.1]='3 latest'
+	[4.0]='4'
+)
+
 self="$(basename "$BASH_SOURCE")"
 cd "$(dirname "$(readlink -f "$BASH_SOURCE")")"
+
+versions=( */ )
+versions=( "${versions[@]%/}" )
+
+# sort version numbers with highest first
+IFS=$'\n'; versions=( $(echo "${versions[*]}" | sort -rV) ); unset IFS
 
 # get the most recent commit which modified any of "$@"
 fileCommit() {
@@ -41,19 +52,25 @@ join() {
 	echo "${out#$sep}"
 }
 
-commit="$(dirCommit .)"
+for version in "${versions[@]}"; do
+	commit="$(dirCommit "$version")"
 
-fullVersion="$(git show "$commit":Dockerfile | awk '$1 == "ENV" && $2 == "CELERY_VERSION" { print $3; exit }')"
+	fullVersion="$(git show "$commit":"$version/Dockerfile" | awk '$1 == "ENV" && $2 == "CELERY_VERSION" { print $3; exit }')"
 
-versionAliases=()
-while [ "${fullVersion%.*}" != "$fullVersion" ]; do
-	versionAliases+=( $fullVersion )
-	fullVersion="${fullVersion%.*}"
+	versionAliases=()
+	while [ "$fullVersion" != "$version" -a "${fullVersion%[.-]*}" != "$fullVersion" ]; do
+		versionAliases+=( $fullVersion )
+		fullVersion="${fullVersion%[.-]*}"
+	done
+	versionAliases+=(
+		$version
+		${aliases[$version]:-}
+	)
+
+	echo
+	cat <<-EOE
+		Tags: $(join ', ' "${versionAliases[@]}")
+		GitCommit: $commit
+		Directory: $version
+	EOE
 done
-versionAliases+=( $fullVersion latest )
-
-echo
-cat <<-EOE
-	Tags: $(join ', ' "${versionAliases[@]}")
-	GitCommit: $commit
-EOE
