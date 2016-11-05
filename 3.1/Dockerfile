@@ -5,7 +5,7 @@ WORKDIR /home/user
 
 RUN pip install redis
 
-ENV CELERY_VERSION 3.1.24
+ENV CELERY_VERSION 3.1.25
 
 RUN pip install celery=="$CELERY_VERSION"
 
